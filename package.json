@@ -2,13 +2,13 @@
   "name": "kirodev-exam",
   "version": "1.0.0",
   "description": "kirodev exam task",
-  "main": "server.js",
+  "main": "src/server.js",
   "type": "module",
   "engines": {
     "node": "18.14.2"
   },
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "nodemon src/server.js"
   },
   "repository": {
     "type": "git",
