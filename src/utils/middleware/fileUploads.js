@@ -1,7 +1,8 @@
-
 import multer from "multer";
-import AppError from "../services/AppError.js"
+import AppError from "../services/AppError.js";
 import fs from 'fs';
+import path from 'path';
+
 /**
  * This is Options for the multer file upload
  * ```
@@ -15,13 +16,23 @@ let options = (folderName) => {
   const storage = multer.diskStorage({
     // destination to store the uploaded image 
     destination: function (req, file, cb) {
+      const uploadPath = path.join(__dirname, 'uploads', folderName);
 
-    // Create folder if it does not exist
-    if (!fs.existsSync(`uploads/${folderName}`)) {
-      fs.mkdirSync(`uploads/${folderName}`);
-    }
+      console.log(`Attempting to create directory at: ${uploadPath}`);
 
-      cb(null, `uploads/${folderName}`);
+      // Create folder if it does not exist
+      if (!fs.existsSync(uploadPath)) {
+        try {
+          fs.mkdirSync(uploadPath, { recursive: true });
+          console.log(`Directory created at: ${uploadPath}`);
+        } catch (error) {
+          console.error(`Error creating directory: ${error.message}`);
+          cb(new AppError("Failed to create directory", 500), false);
+          return;
+        }
+      }
+
+      cb(null, uploadPath);
     },
     // Generates name for the uploaded file with a unique name 
     filename: function (req, file, cb) {
@@ -29,17 +40,17 @@ let options = (folderName) => {
       cb(null, uniqueSuffix + "-" + file.originalname);
     },
   });
-  // Filters the uplaoded file to make sure it is image only
+
+  // Filters the uploaded file to make sure it is image only
   function fileFilter(req, file, cb) {
     if (file.mimetype.startsWith("image")) {
       cb(null, true);
     } else {
-      cb(new AppError("invalid image", 400), false);
+      cb(new AppError("Invalid image type", 400), false);
     }
   }
 
   return multer({ storage, fileFilter });
-
 };
 
 /**
@@ -50,4 +61,4 @@ let options = (folderName) => {
 * @param {*} folderName The folderName to save the uploaded images at.
 * @param {*} fieldName The field name (Key name) associated with the file upload (as value) .
 */
-export const uploadSingleFile = (folderName, fieldName) =>  options(folderName).single(fieldName);
+export const uploadSingleFile = (folderName, fieldName) => options(folderName).single(fieldName);
